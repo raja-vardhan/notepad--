@@ -1,3 +1,7 @@
+/*
+	AUTHOR: Raja Vardhan
+	EMAIL:  rajavardhan054@gmail.com
+*/
 #include<ncurses.h>
 #include<string>
 #include<fstream>
