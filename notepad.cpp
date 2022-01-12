@@ -1,8 +1,13 @@
+/*
+	AUTHOR: Raja Vardhan
+	EMAIL:  rajavardhan054@gmail.com
+*/
 #include<ncurses.h>
 #include<string>
 #include<fstream>
 #include<list>
 #include<iterator>
+#include<iostream>
 
 #define ctrl(x) ((x) & 0x1f)
 
@@ -16,6 +21,7 @@ WINDOW* bottomBar;
 void drawTopBar();
 void drawBottomBar(int);
 void drawQuitOptionsBar();
+string drawNameFileBar();
 
 /* 
    -> Doubly linked list of doubly linked list of characters   
@@ -35,6 +41,8 @@ class Buffer{
 
 	Buffer(ifstream &f, int height){
 		this->height = height;
+		if(!f.is_open())
+			return;
 		while(1){
 			string s;
 			if(!getline(f, s))
@@ -283,9 +291,12 @@ class MainWindow{
 	}
 
 	void save(){
+		if(filename == ""){
+			filename = drawNameFileBar();
+		}
 		ofstream file;
 		file.open(filename, ios::out | ios::trunc);
-		
+
 		for(auto i = buffer.data.begin(); i != buffer.data.end(); i++){
 			for(auto j = (*i).begin(); j != (*i).end(); j++){
 				file << (*j);
@@ -435,6 +446,32 @@ void drawQuitOptionsBar(){
 	wrefresh(bottomBar);
 }
 
+string drawNameFileBar(){
+	int y, x;
+	getyx(stdscr, y, x);
+	wclear(bottomBar);
+	wbkgd(bottomBar, COLOR_PAIR(1));
+	string newfilemsg = "Enter the name of the file: ";
+	string filename = "";
+	mvwprintw(bottomBar, 0, 0, newfilemsg.c_str());
+	while(1){
+		int c = wgetch(bottomBar);
+		int y, x;
+		getyx(bottomBar, y, x);
+		if(c == '\n'){
+			break;
+		}
+		else{
+			winsch(bottomBar, c);
+			wmove(bottomBar, y, x+1);
+			filename += c;
+		}
+	}
+	drawBottomBar(STATUS);
+	wmove(stdscr, y, x);
+	return filename;
+}
+
 void drawBars(){
 	int y, x;
 	getyx(stdscr, y, x);
@@ -462,18 +499,24 @@ void init(){
 	drawBars();
 }
 
+
 int main(int argc, char *argv[]){
 
 	init();
 
-	if(argc != 2){
+	if(argc > 2){
 		endwin();
+		cout << "More than one file provided as argument" << endl;
 		return 0;
 	}
-
-	MainWindow mainWin = MainWindow(argv[1]);
-
-	mainWin.process();
+	else if(argc == 2){
+		MainWindow mainWin = MainWindow(argv[1]);
+		mainWin.process();
+	}
+	else{
+		MainWindow mainWin = MainWindow("");
+		mainWin.process();
+	}
 
 	endwin();
 	return 0;
